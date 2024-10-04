@@ -1,0 +1,17 @@
+tiny
+real	0m25,938s
+user	1m31,610s
+sys	0m3,187s
+base
+real	0m56,470s
+user	3m30,876s
+sys	0m4,997s
+small
+real	2m24,491s
+user	9m14,754s
+sys	0m9,013s
+medium
+real	7m14,955s
+user	28m14,648s
+sys	0m19,601s
+large
