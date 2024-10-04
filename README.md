@@ -1,4 +1,6 @@
-# Translation of interviews
+# Evaluating results of Whisper (OpenAI) transcribing
+
+## Translation of interviews
 
 Following Whisper [instructions on github](https://github.com/openai/whisper).
 
