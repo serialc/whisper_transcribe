@@ -20,7 +20,7 @@ turbo   3m27,205s 12m15,841s 1m3,422s
 
 ### Methodology
 
-I ran the following command while adjust the [size] to the options above:
+I ran the following command while adjusting the model [size] to the options above:
 
     time whisper --output_dir [size] carl_sagan.mp3 --language English --model [size]
 

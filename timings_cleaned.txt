@@ -1,0 +1,7 @@
+model	real	user	sys
+tiny	0m25,938s	1m31,610s	0m3,187s
+base	0m56,470s	3m30,876s	0m4,997s
+small	2m24,491s	9m14,754s	0m9,013s
+medium	7m14,955s	28m14,648s	0m19,601s
+large	17m59,168s	59m46,586s	11m21,372s
+turbo	4m36,343s	16m32,411s	1m19,427s

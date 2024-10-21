@@ -1,0 +1,333 @@
+---
+title: "Whisper: Introduction and transcription evaluation"
+author: "Cyrille M&eacute;dard de Chardon"
+institute: LISER
+slide-number: true
+format:
+  revealjs:
+    width: 1600
+    height: 900
+editor: visual
+include-in-header:
+  text: |
+      <style>
+      section {
+        font-size: 0.9em;
+      }
+      .reveal pre code {
+        max-height: 1000px;
+      }
+      .reveal section pre code {
+        background-color: black;
+        color: white;
+        margin-top: -0.6em;
+        margin-bottom: -0.6em;
+        padding: 0.5em;
+      }
+      section img {
+        width: 100%;
+      }
+      #title-slide .title {
+        font-size: 1.5em;
+        color: #b02925;
+      }
+      </style>
+editor_options: 
+  chunk_output_type: console
+---
+
+## Whisper
+
+Whisper is a transcribing/translating model created by [OpenAI](https://openai.com/index/whisper/).
+
+Whisper can:
+
+- transcribe recordings of many languages
+- translate recordings to English ([results vary](https://github.com/openai/whisper?tab=readme-ov-file#available-models-and-languages))
+
+As a researcher the beauty is that you do all the processing on your local machine. There's no concern for data privacy.
+
+Processing is relatively fast (more on that later).
+
+## Installation
+
+There are [instructions](https://github.com/openai/whisper?tab=readme-ov-file#setup).
+
+Using Whisper is fairly easy, the installation may be more difficult.
+
+I had to use a Virtual Environment (VE) on linux to install the Python dependencies separately.
+
+## Virtual environment
+
+:::: {.columns}
+::: {.column}
+Working with Python used to get messy and broken when you installed python packages with both `apt` and `pip`.
+
+Now in Ubuntu/Mint you get an error message when trying to install a package with `pip` saying `error: externally-managed-environment` (It's managed by apt only now).
+
+This is to protect you. However, now when you are following instructions online on installing a package that use pip, you're stuck.
+**Enter virtual environments.**
+:::
+
+::: {.column}
+There are various types of virtual environments - here we'll use Python's `venv`.
+
+A virtual environment is a way of managing the environment settings and dependencies for a specific program, the context if you will, rather than changing your machine's overall configuration.
+:::
+::::
+
+## VE creation and use
+
+:::: {.columns}
+::: {.column}
+
+Create:
+
+    $ python -m venv venv_name
+
+The settings/dependencies/libraries will be stored in the `venv_name`.
+
+Load/activate the virtual environment:
+
+    $ . ./venv_name/bin/activate
+
+or:
+
+    $ source venv_name/bin/activate
+
+You should see a change in your shell name (to the left of your $).
+
+**Sanity check**, try the following:
+
+    (venve_name) $ which python3
+
+Should show something like:
+
+    /home/username/.. ../venv_name/bin/python3
+
+Not:
+
+    /usr/bin/python3
+:::
+::: {.column}
+Now that it's active you can update pip:
+
+    (venv_name) $ pip install --upgrade pip
+
+And then install any other pip packages you would like!
+
+**You can now work without worrying about package installations messing with your other projects!**
+
+To leave the virtual environment just use `deactivate`:
+
+    (venv_name) $ deactivate
+    
+:::
+::::
+
+## Whisper configuration
+
+There's [instructions](https://github.com/openai/whisper?tab=readme-ov-file#command-line-usage), but simply:
+
+    (venv_name) $ whisper carl_sagan.mp3 --model tiny.en
+    
+Or, with some common options:
+
+    (venv_name) $ whisper --output_dir [dirname] carl_sagan.mp3 --language English --model [size]
+
+<p>&nbsp;</p>
+### Audio Clip
+We are using an audio clip spoken by Carl Sagan, describing the pale blue dot within the golden sunbeam.
+
+[![Voyager 1 (1990) NASA](Pale_Blue_Dot.png)](https://en.wikipedia.org/wiki/Pale_Blue_Dot)
+
+## Output formats
+
+- JSON (structured and rich -> coding input)
+- SRT (sub-titles format)
+- VTT (sub-titles format)
+- TSV (tab separated values/table)
+- TXT (simple, not time-codes)
+
+This means Whisper can also be great at generating subtitles in native format with no additional effort!
+
+## Value of JSON output?
+
+A comparison of reported probabilities per line in two models.
+
+:::: {.columns}
+::: {.column}
+```{r, echo=FALSE}
+#install.packages("rjson")
+library(rjson)
+
+mtiny <- rjson::fromJSON(file = '../outputs/tiny/carl_sagan.json')
+mturbo <- rjson::fromJSON(file='../outputs/turbo/carl_sagan.json')
+
+ptiny <- sapply(mtiny$segments, function(x) { x$avg_logprob })
+pturbo <- sapply(mturbo$segments, function(x) { x$avg_logprob })
+
+hist(ptiny, breaks = as.integer((max(ptiny) - min(ptiny)) * 200), xlim = c(-.4, -0.1))
+
+```
+Lowest probability (confidence?) line:
+```{r}
+print(mtiny$segments[[which( min(ptiny) == ptiny)[1]]]$text)
+
+```
+:::
+
+::: {.column}
+```{r}
+hist(pturbo, breaks = as.integer((max(pturbo) - min(pturbo)) * 200), xlim = c(-.4, -0.1))
+
+```
+Lowest probability (confidence?) line:
+```{r}
+print(mturbo$segments[[which( min(pturbo) == pturbo)[1]]]$text)
+```
+:::
+::::
+
+## Running times
+
+Source audio of Carl Sagan speaking lasts 4m35s.
+
+:::: {.columns}
+::: {.column width="70%"}
+```{r}
+rt <- read.table(file="../timings_cleaned.txt", sep="\t", header = TRUE)
+rownames(rt) <- rt$model
+rt <- rt[,2:4] # drop row name column
+
+# convert XmYs to decimal seconds
+mpt <- data.frame(sapply(rt, function(x) {
+  #x <- rt[1,1]
+  sapply(strsplit(x, split='s'), function(ms) {
+    ms <- strsplit(ms, split='m')[[1]]
+    as.numeric(ms[1]) * 60 + as.numeric(sub(',', replacement = '.', x = ms[2]))
+  })
+}), row.names = rownames(rt))
+
+cs <- 4*60 + 35
+barplot(mpt$real, names.arg = rownames(rt), yaxt='n', xlab="Model", ylim=c(0,4*cs))
+axis(2, at=(0:4)*cs, labels = 0:4)
+mtext(text = "Duration (multiple of source duration)", side = 2, line = 3)
+
+```
+
+::: 
+::: {.column width="30%"}
+```{r}
+print(mpt)
+```
+
+::: 
+::::
+
+## Output comparison summary
+
+Let's look at whether the lines match:
+    diff -y --suppress-common-lines [model1]/carl_sagan.txt [model2]/carl_sagan.txt  | wc -l
+    
+```{r}
+mc <- read.table('../model_comparison.txt', sep=' ', header = TRUE, na.strings = '-')
+
+print(mc, row.names = FALSE)
+```
+
+
+## Text comparison
+
+<div style="font-size: 0.8em">
+:::: {.columns}
+::: {.column width=50%}
+### Tiny
+The voyages were guaranteed to work only until the Saturn encounter.  
+I thought it might be a good idea just after Saturn to have them take one last glance  
+homeward. From Saturn I knew, the earth would appear too small for Voyager to make  
+
+### Base
+The voyages were guaranteed to work only until the Saturn encounter.  
+I thought it might be a good idea just after Saturn to have them take one last glance homeward.  
+From Saturn I knew the Earth would appear too small for Voyager to make out any detail.  
+
+### Small
+The voyagers were guaranteed to work only until the Saturn encounter.  
+I thought it might be a good idea, just after Saturn, to have them take one last glance homeward.  
+From Saturn, I knew, the Earth would appear too small for voyager to make out any detail.  
+:::
+
+::: {.column width=50%}
+### Medium
+The Voyagers were guaranteed to work only until the Saturn encounter.  
+I thought it might be a good idea, just after Saturn, to have them take one last glance homeward.  
+From Saturn, I knew, the Earth would appear too small for Voyager to make out any detail.  
+
+### Large
+The Voyagers were guaranteed to work only until the Saturn encounter.  
+I thought it might be a good idea, just after Saturn,  
+to have them take one last glance homeward.  
+
+### Turbo
+The Voyagers were guaranteed to work only until the Saturn encounter.  
+I thought it might be a good idea, just after Saturn, to have them take one last glance homeward.  
+From Saturn, I knew, the Earth would appear too small for Voyager to make out any detail.  
+:::
+::::
+</div>
+
+## Tiny
+```{r}
+lines <- readLines('../outputs/tiny/carl_sagan.tsv')
+print(gsub("\t", " ", lines), row.names=FALSE)
+```
+
+## Small
+```{r}
+lines <- readLines('../outputs/small/carl_sagan.tsv')
+print(gsub("\t", " ", lines), row.names=FALSE)
+```
+
+## Large
+```{r}
+lines <- readLines('../outputs/large/carl_sagan.tsv')
+print(gsub("\t", " ", lines), row.names=FALSE)
+```
+
+## Turbo
+```{r}
+lines <- readLines('../outputs/turbo/carl_sagan.tsv')
+print(gsub("\t", " ", lines), row.names=FALSE)
+```
+
+## Testing Luxembourgish transcription and translation
+Source video of [Prime Minister Luc Frieden's New Year Speech](https://www.youtube.com/watch?v=KJ7nbPJvOIk) Duration 6m39s.
+
+A transcript is [provided](https://gouvernement.lu/en/actualites/toutes_actualites/discours/2023/12-decembre/31-frieden-nouvelan.html) to compare with.
+
+Ran the commands to transcribe:
+
+    $ whisper PM_Friedens_NYS.m4a --language Luxembourgish --model turbo
+
+Results look very good.
+    
+And then to transcribe and translate to English:
+
+    $ whisper PM_Friedens_NYS.m4a --language Luxembourgish --model turbo --task translate
+
+This doesn't seem to work.
+
+## Test \#2
+
+During a meeting we recorded ourselves introducing ourselves in English, German, Italian, and French.
+
+We applied whisper, without specifying a source language:
+
+    $ whisper Monday.m4a --model turbo
+    
+The results were all transcribed and translated to English. Besides small issues with names, the results were very good.
+
+## Thanks
+
+That's it. I hope you found this helpful.

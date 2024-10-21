@@ -15,3 +15,10 @@ real	7m14,955s
 user	28m14,648s
 sys	0m19,601s
 large
+real	17m59,168s
+user	59m46,586s
+sys	11m21,372s
+turbo
+real	4m36,343s
+user	16m32,411s
+sys	1m19,427s

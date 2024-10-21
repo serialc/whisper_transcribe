@@ -1,0 +1,7 @@
+model tiny base small medium large turbo
+tiny - 38 39 38 86 102
+base - - 26 27 82 101
+small - - - 24 78 95
+medium - - - - 81 93
+large - - - - - 61
+turbo - - - - - -

@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="whisper_evaluation_files/libs/clipboard/clipboard.min.js"></script>
+<script src="whisper_evaluation_files/libs/quarto-html/tabby.min.js"></script>
+<script src="whisper_evaluation_files/libs/quarto-html/popper.min.js"></script>
+<script src="whisper_evaluation_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="whisper_evaluation_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="whisper_evaluation_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="whisper_evaluation_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
+<link href="whisper_evaluation_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.5.57">
+
+  <meta name="author" content="Cyrille Médard de Chardon">
+  <title>Whisper: Introduction and transcription evaluation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="whisper_evaluation_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="whisper_evaluation_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="whisper_evaluation_files/libs/revealjs/dist/theme/quarto.css">
+  <link href="whisper_evaluation_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="whisper_evaluation_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="whisper_evaluation_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="whisper_evaluation_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+
+  .callout {
+    margin-top: 1em;
+    margin-bottom: 1em;  
+    border-radius: .25rem;
+  }
+
+  .callout.callout-style-simple { 
+    padding: 0em 0.5em;
+    border-left: solid #acacac .3rem;
+    border-right: solid 1px silver;
+    border-top: solid 1px silver;
+    border-bottom: solid 1px silver;
+    display: flex;
+  }
+
+  .callout.callout-style-default {
+    border-left: solid #acacac .3rem;
+    border-right: solid 1px silver;
+    border-top: solid 1px silver;
+    border-bottom: solid 1px silver;
+  }
+
+  .callout .callout-body-container {
+    flex-grow: 1;
+  }
+
+  .callout.callout-style-simple .callout-body {
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .callout.callout-style-default .callout-body {
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  .callout.callout-titled.callout-style-simple .callout-body {
+    margin-top: 0.2em;
+  }
+
+  .callout:not(.callout-titled) .callout-body {
+      display: flex;
+  }
+
+  .callout:not(.no-icon).callout-titled.callout-style-simple .callout-content {
+    padding-left: 1.6em;
+  }
+
+  .callout.callout-titled .callout-header {
+    padding-top: 0.2em;
+    margin-bottom: -0.2em;
+  }
+
+  .callout.callout-titled .callout-title  p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+    
+  .callout.callout-titled.callout-style-simple .callout-content  p {
+    margin-top: 0;
+  }
+
+  .callout.callout-titled.callout-style-default .callout-content  p {
+    margin-top: 0.7em;
+  }
+
+  .callout.callout-style-simple div.callout-title {
+    border-bottom: none;
+    font-size: .9rem;
+    font-weight: 600;
+    opacity: 75%;
+  }
+
+  .callout.callout-style-default  div.callout-title {
+    border-bottom: none;
+    font-weight: 600;
+    opacity: 85%;
+    font-size: 0.9rem;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  .callout.callout-style-default div.callout-content {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  .callout.callout-style-simple .callout-icon::before {
+    height: 1rem;
+    width: 1rem;
+    display: inline-block;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 1rem 1rem;
+  }
+
+  .callout.callout-style-default .callout-icon::before {
+    height: 0.9rem;
+    width: 0.9rem;
+    display: inline-block;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 0.9rem 0.9rem;
+  }
+
+  .callout-title {
+    display: flex
+  }
+    
+  .callout-icon::before {
+    margin-top: 1rem;
+    padding-right: .5rem;
+  }
+
+  .callout.no-icon::before {
+    display: none !important;
+  }
+
+  .callout.callout-titled .callout-body > .callout-content > :last-child {
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  .callout.callout-titled .callout-icon::before {
+    margin-top: .5rem;
+    padding-right: .5rem;
+  }
+
+  .callout:not(.callout-titled) .callout-icon::before {
+    margin-top: 1rem;
+    padding-right: .5rem;
+  }
+
+  /* Callout Types */
+
+  div.callout-note {
+    border-left-color: #4582ec !important;
+  }
+
+  div.callout-note .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEU0lEQVRYCcVXTWhcVRQ+586kSUMMxkyaElstCto2SIhitS5Ek8xUKV2poatCcVHtUlFQk8mbaaziwpWgglJwVaquitBOfhQXFlqlzSJpFSpIYyXNjBNiTCck7x2/8/LeNDOZxDuEkgOXe++553zfefee+/OYLOXFk3+1LLrRdiO81yNqZ6K9cG0P3MeFaMIQjXssE8Z1JzLO9ls20MBZX7oG8w9GxB0goaPrW5aNMp1yOZIa7Wv6o2ykpLtmAPs/vrG14Z+6d4jpbSKuhdcSyq9wGMPXjonwmESXrriLzFGOdDBLB8Y6MNYBu0dRokSygMA/mrun8MGFN3behm6VVAwg4WR3i6FvYK1T7MHo9BK7ydH+1uurECoouk5MPRyVSBrBHMYwVobG2aOXM07sWrn5qgB60rc6mcwIDJtQrnrEr44kmy+UO9r0u9O5/YbkS9juQckLed3DyW2XV/qWBBB3ptvI8EUY3I9p/67OW+g967TNr3Sotn3IuVlfMLVnsBwH4fsnebJvyGm5GeIUA3jljERmrv49SizPYuq+z7c2H/jlGC+Ghhupn/hcapqmcudB9jwJ/3jvnvu6vu5lVzF1fXyZuZZ7U8nRmVzytvT+H3kilYvH09mLWrQdwFSsFEsxFVs5fK7A0g8gMZjbif4ACpKbjv7gNGaD8bUrlk8x+KRflttr22JEMRUbTUwwDQScyzPgedQHZT0xnx7ujw2jfVfExwYHwOsDTjLdJ2ebmeQIlJ7neo41s/DrsL3kl+W2lWvAga0tR3zueGr6GL78M3ifH0rGXrBC2aAR8uYcIA5gwV8zIE8onoh8u0Fca/ciF7j1uOzEnqcIm59sEXoGc0+z6+H45V1CvAvHcD7THztu669cnp+L0okAeIc6zjbM/24LgGM1gZk7jnRu1aQWoU9sfUOuhrmtaPIO3YY1KLLWZaEO5TKUbMY5zx8W9UJ6elpLwKXbsaZ4EFl7B4bMtDv0iRipKoDQT2sNQI9b1utXFdYisi+wzZ/ri/1m7QfDgEuvgUUEIJPq3DhX/5DWNqIXDOweC2wvIR90Oq3lDpdMIgD2r0dXvGdsEW5H6x6HLRJYU7C69VefO1x8Gde1ZFSJLfWS1jbCnhtOPxmpfv2LXOA2Xk2tvnwKKPFuZ/oRmwBwqRQDcKNeVQkYcOjtWVBuM/JuYw5b6isojIkYxyYAFn5K7ZBF10fea52y8QltAg6jnMqNHFBmGkQ1j+U43HMi2xMar1Nv0zGsf1s8nUsmUtPOOrbFIR8bHFDMB5zL13Gmr/kGlCkUzedTzzmzsaJXhYawnA3UmARpiYj5ooJZiUoxFRtK3X6pgNPv+IZVPcnwbOl6f+aBaO1CNvPW9n9LmCp01nuSaTRF2YxHqZ8DYQT6WsXT+RD6eUztwYLZ8rM+rcPxamv1VQzFUkzFXvkiVrySGQgJNvXHJAxiU3/NwiC03rSf05VBaPtu/Z7/B8Yn/w7eguloAAAAAElFTkSuQmCC');
+  }
+
+  div.callout-note.callout-style-default .callout-title {
+    background-color: #dae6fb
+  }
+
+  div.callout-important {
+    border-left-color: #d9534f !important;
+  }
+
+  div.callout-important .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEKklEQVRYCcVXTWhcVRS+575MJym48A+hSRFr00ySRQhURRfd2HYjk2SSTokuBCkU2o0LoSKKraKIBTcuFCoidGFD08nkBzdREbpQ1EDNIv8qSGMFUboImMSZd4/f9zJv8ibJMC8xJQfO3HPPPef7zrvvvnvviIkpC9nsw0UttFunbUhpFzFtarSd6WJkStVMw5xyVqYTvkwfzuf/5FgtkVoB0729j1rjXwThS7Vio+Mo6DNnvLfahoZ+i/o32lULuJ3NNiz7q6+pyAUkJaFF6JwaM2lUJlV0MlnQn5aTRbEu0SEqHUa0A4AdiGuB1kFXRfVyg5d87+Dg4DL6m2TLAub60ilj7A1Ec4odSAc8X95sHh7+ZRPCFo6Fnp7HfU/fBng/hi10CjCnWnJjsxvDNxWw0NfV6Rv5GgP3I3jGWXumdTD/3cbEOP2ZbOZp69yniG3FQ9z1jD7bnBu9Fc2tKGC2q+uAJOQHBDRiZX1x36o7fWBs7J9ownbtO+n0/qWkvW7UPIfc37WgT6ZGR++EOJyeQDSb9UB+DZ1G6DdLDzyS+b/kBCYGsYgJbSQHuThGKRcw5xdeQf8YdNHsc6ePXrlSYMBuSIAFTGAtQo+VuALo4BX83N190NWZWbynBjhOHsmNfFWLeL6v+ynsA58zDvvAC8j5PkbOcXCMg2PZFk3q8MjI7WAG/Dp9AwP7jdGBOOQkAvlFUB+irtm16I1Zw9YBcpGTGXYmk3kQIC/Cds55l+iMI3jqhjAuaoe+am2Jw5GT3Nbz3CkE12NavmzN5+erJW7046n/CH1RO/RVa8lBLozXk9uqykkGAyRXLWlLv5jyp4RFsG5vGVzpDLnIjTWgnRy2Rr+tDKvRc7Y8AyZq10jj8DqXdnIRNtFZb+t/ZRtXcDiVnzpqx8mPcDWxgARUqx0W1QB9MeUZiNrV4qP+Ehc+BpNgATsTX8ozYKL2NtFYAHc84fG7ndxUPr+AR/iQSns7uSUufAymwDOb2+NjK27lEFocm/EE2WpyIy/Hi66MWuMKJn8RvxIcj87IM5Vh9663ziW36kR0HNenXuxmfaD8JC7tfKbrhFr7LiZCrMjrzTeGx+PmkosrkNzW94ObzwocJ7A1HokLolY+AvkTiD/q1H0cN48c5EL8Crkttsa/AXQVDmutfyku0E7jShx49XqV3MFK8IryDhYVbj7Sj2P2eBxwcXoe8T8idsKKPRcnZw1b+slFTubwUwhktrfnAt7J++jwQtLZcm3sr9LQrjRzz6cfMv9aLvgmnAGvpoaGLxM4mAEaLV7iAzQ3oU0IvD5x9ix3yF2RAAuYAOO2f7PEFWCXZ4C9Pb2UsgDeVnFSpbFK7/IWu7TPTvBqzbGdCHOJQSxiEjt6IyZmxQyEJHv6xyQsYk//moVFsN2zP6fRImjfq7/n/wFDguUQFNEwugAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-important.callout-style-default .callout-title {
+    background-color: #f7dddc
+  }
+
+  div.callout-warning {
+    border-left-color: #f0ad4e !important;
+  }
+
+  div.callout-warning .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAETklEQVRYCeVWW2gcVRg+58yaTUnizqbipZeX4uWhBEniBaoUX1Ioze52t7sRq6APio9V9MEaoWlVsFasRq0gltaAPuxms8lu0gcviE/FFOstVbSIxgcv6SU7EZqmdc7v9+9mJtNks51NTUH84ed889/PP+cmxP+d5FIbMJmNbpREu4WUkiTtCicKny0l1pIKmBzovF2S+hIJHX8iEu3hZJ5lNZGqyRrGSIQpq15AzF28jgpeY6yk6GVdrfFqdrD6Iw+QlB8g0YS2g7dyQmXM/IDhBhT0UCiRf59lfqmmDvzRt6kByV/m4JjtzuaujMUM2c5Z2d6JdKrRb3K2q6mA+oYVz8JnDdKPmmNthzkAk/lN63sYPgevrguc72aZX/L9C6x09GYyxBgCX4NlvyGUHOKELlm5rXeR1kchuChJt4SSwyddZRXgvwMGvYo4QSlk3/zkHD8UHxwVJA6zjZZqP8v8kK8OWLnIZtLyCAJagYC4rTGW/9Pqj92N/c+LUaAj27movwbi19tk/whRCIE7Q9vyI6yvRpftAKVTdUjOW40X3h5OXsKCdmFcx0xlLJoSuQngnrJe7Kcjm4OMq9FlC7CMmScQANuNvjfP3PjGXDBaUQmbp296S5L4DrpbrHN1T87ZVEZVCzg1FF0Ft+dKrlLukI+/c9ENo+TvlTDbYFvuKPtQ9+l052rXrgKoWkDAFnvh0wTOmYn8R5f4k/jN/fZiCM1tQx9jQQ4ANhqG4hiL0qIFTGViG9DKB7GYzgubnpofgYRwO+DFjh0Zin2m4b/97EDkXkc+f6xYAPX0KK2I/7fUQuwzuwo/L3AkcjugPNixC8cHf0FyPjWlItmLxWw4Ou9YsQCr5fijMGoD/zpdRy95HRysyXA74MWOnscpO4j2y3HAVisw85hX5+AFBRSHt4ShfLFkIMXTqyKFc46xdzQM6XbAi702a7sy04J0+feReMFKp5q9esYLCqAZYw/k14E/xcLLsFElaornTuJB0svMuJINy8xkIYuL+xPAlWRceH6+HX7THJ0djLUom46zREu7tTkxwmf/FdOZ/sh6Q8qvEAiHpm4PJ4a/doJe0gH1t+aHRgCzOvBvJedEK5OFE5jpm4AGP2a8Dxe3gGJ/pAutug9Gp6he92CsSsWBaEcxGx0FHytmIpuqGkOpldqNYQK8cSoXvd+xLxXADw0kf6UkJNFtdo5MOgaLjiQOQHcn+A6h5NuL2s0qsC2LOM75PcF3yr5STuBSAcGG+meA14K/CI21HcS4LBT6tv0QAh8Dr5l93AhZzG5ZJ4VxAqdZUEl9z7WJ4aN+svMvwHHL21UKTd1mqvChH7/Za5xzXBBKrUcB0TQ+Ulgkfbi/H/YT5EptrGzsEK7tR1B7ln9BBwckYfMiuSqklSznIuoIIOM42MQO+QnduCoFCI0bpkzjCjddHPN/F+2Yu+sd9bKNpVwHhbS3LluK/0zgfwD0xYI5dXuzlQAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-warning.callout-style-default .callout-title {
+    background-color: #fcefdc
+  }
+
+  div.callout-tip {
+    border-left-color: #02b875 !important;
+  }
+
+  div.callout-tip .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAADr0lEQVRYCe1XTWgTQRj9ZjZV8a9SPIkKgj8I1bMHsUWrqYLVg4Ue6v9BwZOxSYsIerFao7UiUryIqJcqgtpimhbBXoSCVxUFe9CTiogUrUp2Pt+3aUI2u5vdNh4dmMzOzHvvezuz8xNFM0mjnbXaNu1MvFWRXkXEyE6aYOYJpdW4IXuA4r0fo8qqSMDBU0v1HJUgVieAXxzCsdE/YJTdFcVIZQNMyhruOMJKXYFoLfIfIvVIMWdsrd+Rpd86ZmyzzjJmLStqRn0v8lzkb4rVIXvnpScOJuAn2ACC65FkPzEdEy4TPWRLJ2h7z4cArXzzaOdKlbOvKKX25Wl00jSnrwVxAg3o4dRxhO13RBSdNvH0xSARv3adTXbBdTf64IWO2vH0LT+cv4GR1DJt+DUItaQogeBX/chhbTBxEiZ6gftlDNXTrvT7co4ub5A6gp9HIcHvzTa46OS5fBeP87Qm0fQkr4FsYgVQ7Qg+ZayaDg9jhg1GkWj8RG6lkeSacrrHgDaxdoBiZPg+NXV/KifMuB6//JmYH4CntVEHy/keA6x4h4CU5oFy8GzrBS18cLJMXcljAKB6INjWsRcuZBWVaS3GDrqB7rdapVIeA+isQ57Eev9eCqzqOa81CY05VLd6SamW2wA2H3SiTbnbSxmzfp7WtKZkqy4mdyAlGx7ennghYf8voqp9cLSgKdqNfa6RdRsAAkPwRuJZNbpByn+RrJi1RXTwdi8RQF6ymDwGMAtZ6TVE+4uoKh+MYkcLsT0Hk8eAienbiGdjJHZTpmNjlbFJNKDVAp2fJlYju6IreQxQ08UJDNYdoLSl6AadO+fFuCQqVMB1NJwPm69T04Wv5WhfcWyfXQB+wXRs1pt+nCknRa0LVzSA/2B+a9+zQJadb7IyyV24YAxKp2Jqs3emZTuNnKxsah+uabKbMk7CbTgJx/zIgQYErIeTKRQ9yD9wxVof5YolPHqaWo7TD6tJlh7jQnK5z2n3+fGdggIOx2kaa2YI9QWarc5Ce1ipNWMKeSG4DysFF52KBmTNMmn5HqCFkwy34rDg05gDwgH3bBi+sgFhN/e8QvRn8kbamCOhgrZ9GJhFDgfcMHzFb6BAtjKpFhzTjwv1KCVuxHvCbsSiEz4CANnj84cwHdFXAbAOJ4LTSAawGWFn5tDhLMYz6nWeU2wJfIhmIJBefcd/A5FWQWGgrWzyORZ3Q6HuV+Jf0Bj+BTX69fm1zWgK7By1YTXchFDORywnfQ7GpzOo6S+qECrsx2ifVQAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-tip.callout-style-default .callout-title {
+    background-color: #ccf1e3
+  }
+
+  div.callout-caution {
+    border-left-color: #fd7e14 !important;
+  }
+
+  div.callout-caution .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAACV0lEQVRYCdVWzWoUQRCuqp2ICBLJXgITZL1EfQDBW/bkzUMUD7klD+ATSHBEfAIfQO+iXsWDxJsHL96EHAwhgzlkg8nBg25XWb0zIb0zs9muYYWkoKeru+vn664fBqElyZNuyh167NXJ8Ut8McjbmEraKHkd7uAnAFku+VWdb3reSmRV8PKSLfZ0Gjn3a6Xlcq9YGb6tADjn+lUfTXtVmaZ1KwBIvFI11rRXlWlatwIAAv2asaa9mlB9wwygiDX26qaw1yYPzFXg2N1GgG0FMF8Oj+VIx7E/03lHx8UhvYyNZLN7BwSPgekXXLribw7w5/c8EF+DBK5idvDVYtEEwMeYefjjLAdEyQ3M9nfOkgnPTEkYU+sxMq0BxNR6jExrAI31H1rzvLEfRIdgcv1XEdj6QTQAS2wtstEALLG1yEZ3QhH6oDX7ExBSFEkFINXH98NTrme5IOaaA7kIfiu2L8A3qhH9zRbukdCqdsA98TdElyeMe5BI8Rs2xHRIsoTSSVFfCFCWGPn9XHb4cdobRIWABNf0add9jakDjQJpJ1bTXOJXnnRXHRf+dNL1ZV1MBRCXhMbaHqGI1JkKIL7+i8uffuP6wVQAzO7+qVEbF6NbS0LJureYcWXUUhH66nLR5rYmva+2tjRFtojkM2aD76HEGAD3tPtKM309FJg5j/K682ywcWJ3PASCcycH/22u+Bh7Aa0ehM2Fu4z0SAE81HF9RkB21c5bEn4Dzw+/qNOyXr3DCTQDMBOdhi4nAgiFDGCinIa2owCEChUwD8qzd03PG+qdW/4fDzjUMcE1ZpIAAAAASUVORK5CYII=');
+  }
+
+  div.callout-caution.callout-style-default .callout-title {
+    background-color: #ffe5d0
+  }
+
+  </style>
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <style>
+  section {
+    font-size: 0.9em;
+  }
+  .reveal pre code {
+    max-height: 1000px;
+  }
+  .reveal section pre code {
+    background-color: black;
+    color: white;
+    margin-top: -0.6em;
+    margin-bottom: -0.6em;
+    padding: 0.5em;
+  }
+  section img {
+    width: 100%;
+  }
+  #title-slide .title {
+    font-size: 1.5em;
+    color: #b02925;
+  }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Whisper: Introduction and transcription evaluation</h1>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Cyrille Médard de Chardon 
+</div>
+        <p class="quarto-title-affiliation">
+            LISER
+          </p>
+    </div>
+</div>
+
+</section>
+<section id="whisper" class="slide level2">
+<h2>Whisper</h2>
+<p>Whisper is a transcribing/translating model created by <a href="https://openai.com/index/whisper/">OpenAI</a>.</p>
+<p>Whisper can:</p>
+<ul>
+<li>transcribe recordings of many languages</li>
+<li>translate recordings to English (<a href="https://github.com/openai/whisper?tab=readme-ov-file#available-models-and-languages">results vary</a>)</li>
+</ul>
+<p>As a researcher the beauty is that you do all the processing on your local machine. There’s no concern for data privacy.</p>
+<p>Processing is relatively fast (more on that later).</p>
+</section>
+<section id="installation" class="slide level2">
+<h2>Installation</h2>
+<p>There are <a href="https://github.com/openai/whisper?tab=readme-ov-file#setup">instructions</a>.</p>
+<p>Using Whisper is fairly easy, the installation may be more difficult.</p>
+<p>I had to use a Virtual Environment (VE) on linux to install the Python dependencies separately.</p>
+</section>
+<section id="virtual-environment" class="slide level2">
+<h2>Virtual environment</h2>
+<div class="columns">
+<div class="column">
+<p>Working with Python used to get messy and broken when you installed python packages with both <code>apt</code> and <code>pip</code>.</p>
+<p>Now in Ubuntu/Mint you get an error message when trying to install a package with <code>pip</code> saying <code>error: externally-managed-environment</code> (It’s managed by apt only now).</p>
+<p>This is to protect you. However, now when you are following instructions online on installing a package that use pip, you’re stuck. <strong>Enter virtual environments.</strong></p>
+</div><div class="column">
+<p>There are various types of virtual environments - here we’ll use Python’s <code>venv</code>.</p>
+<p>A virtual environment is a way of managing the environment settings and dependencies for a specific program, the context if you will, rather than changing your machine’s overall configuration.</p>
+</div></div>
+</section>
+<section id="ve-creation-and-use" class="slide level2">
+<h2>VE creation and use</h2>
+<div class="columns">
+<div class="column">
+<p>Create:</p>
+<pre><code>$ python -m venv venv_name</code></pre>
+<p>The settings/dependencies/libraries will be stored in the <code>venv_name</code>.</p>
+<p>Load/activate the virtual environment:</p>
+<pre><code>$ . ./venv_name/bin/activate</code></pre>
+<p>or:</p>
+<pre><code>$ source venv_name/bin/activate</code></pre>
+<p>You should see a change in your shell name (to the left of your $).</p>
+<p><strong>Sanity check</strong>, try the following:</p>
+<pre><code>(venve_name) $ which python3</code></pre>
+<p>Should show something like:</p>
+<pre><code>/home/username/.. ../venv_name/bin/python3</code></pre>
+<p>Not:</p>
+<pre><code>/usr/bin/python3</code></pre>
+</div><div class="column">
+<p>Now that it’s active you can update pip:</p>
+<pre><code>(venv_name) $ pip install --upgrade pip</code></pre>
+<p>And then install any other pip packages you would like!</p>
+<p><strong>You can now work without worrying about package installations messing with your other projects!</strong></p>
+<p>To leave the virtual environment just use <code>deactivate</code>:</p>
+<pre><code>(venv_name) $ deactivate</code></pre>
+</div></div>
+</section>
+<section id="whisper-configuration" class="slide level2">
+<h2>Whisper configuration</h2>
+<p>There’s <a href="https://github.com/openai/whisper?tab=readme-ov-file#command-line-usage">instructions</a>, but simply:</p>
+<pre><code>(venv_name) $ whisper carl_sagan.mp3 --model tiny.en</code></pre>
+<p>Or, with some common options:</p>
+<pre><code>(venv_name) $ whisper --output_dir [dirname] carl_sagan.mp3 --language English --model [size]</code></pre>
+<p>
+&nbsp;
+</p>
+<h3 id="audio-clip">Audio Clip</h3>
+<p>We are using an audio clip spoken by Carl Sagan, describing the pale blue dot within the golden sunbeam.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><a href="https://en.wikipedia.org/wiki/Pale_Blue_Dot"><img data-src="Pale_Blue_Dot.png" alt="Voyager 1 (1990) NASA"></a></p>
+<figcaption>Voyager 1 (1990) NASA</figcaption>
+</figure>
+</div>
+</section>
+<section id="output-formats" class="slide level2">
+<h2>Output formats</h2>
+<ul>
+<li>JSON (structured and rich -&gt; coding input)</li>
+<li>SRT (sub-titles format)</li>
+<li>VTT (sub-titles format)</li>
+<li>TSV (tab separated values/table)</li>
+<li>TXT (simple, not time-codes)</li>
+</ul>
+<p>This means Whisper can also be great at generating subtitles in native format with no additional effort!</p>
+</section>
+<section id="value-of-json-output" class="slide level2">
+<h2>Value of JSON output?</h2>
+<p>A comparison of reported probabilities per line in two models.</p>
+<div class="columns">
+<div class="column">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="whisper_evaluation_files/figure-revealjs/unnamed-chunk-1-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Lowest probability (confidence?) line:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] " off suns. But precisely because of the obscurity of our world, the revealed, such a picture"</code></pre>
+</div>
+</div>
+</div><div class="column">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="whisper_evaluation_files/figure-revealjs/unnamed-chunk-3-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Lowest probability (confidence?) line:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] " In our obscurity,"</code></pre>
+</div>
+</div>
+</div></div>
+</section>
+<section id="running-times" class="slide level2">
+<h2>Running times</h2>
+<p>Source audio of Carl Sagan speaking lasts 4m35s.</p>
+<div class="columns">
+<div class="column" style="width:70%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="whisper_evaluation_files/figure-revealjs/unnamed-chunk-5-1.png" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:30%;">
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>           real     user     sys
+tiny     25.938   91.610   3.187
+base     56.470  210.876   4.997
+small   144.491  554.754   9.013
+medium  434.955 1694.648  19.601
+large  1079.168 3586.586 681.372
+turbo   276.343  992.411  79.427</code></pre>
+</div>
+</div>
+</div></div>
+</section>
+<section id="output-comparison-summary" class="slide level2">
+<h2>Output comparison summary</h2>
+<p>Let’s look at whether the lines match: diff -y –suppress-common-lines [model1]/carl_sagan.txt [model2]/carl_sagan.txt | wc -l</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  model tiny base small medium large turbo
+   tiny   NA   38    39     38    86   102
+   base   NA   NA    26     27    82   101
+  small   NA   NA    NA     24    78    95
+ medium   NA   NA    NA     NA    81    93
+  large   NA   NA    NA     NA    NA    61
+  turbo   NA   NA    NA     NA    NA    NA</code></pre>
+</div>
+</div>
+</section>
+<section id="text-comparison" class="slide level2">
+<h2>Text comparison</h2>
+<div style="font-size: 0.8em">
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="tiny">Tiny</h3>
+<p>The voyages were guaranteed to work only until the Saturn encounter.<br>
+I thought it might be a good idea just after Saturn to have them take one last glance<br>
+homeward. From Saturn I knew, the earth would appear too small for Voyager to make</p>
+<h3 id="base">Base</h3>
+<p>The voyages were guaranteed to work only until the Saturn encounter.<br>
+I thought it might be a good idea just after Saturn to have them take one last glance homeward.<br>
+From Saturn I knew the Earth would appear too small for Voyager to make out any detail.</p>
+<h3 id="small">Small</h3>
+<p>The voyagers were guaranteed to work only until the Saturn encounter.<br>
+I thought it might be a good idea, just after Saturn, to have them take one last glance homeward.<br>
+From Saturn, I knew, the Earth would appear too small for voyager to make out any detail.</p>
+</div><div class="column" style="width:50%;">
+<h3 id="medium">Medium</h3>
+<p>The Voyagers were guaranteed to work only until the Saturn encounter.<br>
+I thought it might be a good idea, just after Saturn, to have them take one last glance homeward.<br>
+From Saturn, I knew, the Earth would appear too small for Voyager to make out any detail.</p>
+<h3 id="large">Large</h3>
+<p>The Voyagers were guaranteed to work only until the Saturn encounter.<br>
+I thought it might be a good idea, just after Saturn,<br>
+to have them take one last glance homeward.</p>
+<h3 id="turbo">Turbo</h3>
+<p>The Voyagers were guaranteed to work only until the Saturn encounter.<br>
+I thought it might be a good idea, just after Saturn, to have them take one last glance homeward.<br>
+From Saturn, I knew, the Earth would appear too small for Voyager to make out any detail.</p>
+</div></div>
+</div>
+</section>
+<section id="tiny-1" class="slide level2">
+<h2>Tiny</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "start end text"                                                                                                       
+ [2] "0 5000 The voyages were guaranteed to work only until the Saturn encounter."                                          
+ [3] "5000 9760 I thought it might be a good idea just after Saturn to have them take one last glance"                      
+ [4] "9760 14920 homeward. From Saturn I knew, the earth would appear too small for Voyager to make"                        
+ [5] "14920 21120 out any detail. Our planet would be just a point of light, a lonely pixel. Hardly"                        
+ [6] "21120 26800 distinguishable from the many other points of light Voyager would see nearby planets far"                 
+ [7] "26800 33520 off suns. But precisely because of the obscurity of our world, the revealed, such a picture"              
+ [8] "33520 38400 might be we're having. While almost everyone has taught that the earth is a sphere, with"                 
+ [9] "38400 44640 all of us somehow glued to it by gravity, the reality of our circumstance did not really"                 
+[10] "44640 52240 begin to sink in until the famous, frame-filling Apollo photograph of the whole earth."                   
+[11] "52240 58480 The one taken by the Apollo 17 astronauts on the last journey of humans to the moon."                     
+[12] "58480 62720 It seemed to me that another picture of the earth, this one taken from a hundred thousand"                
+[13] "62720 69240 times farther away, might help in the continuing process of revealing to ourselves our true"              
+[14] "69240 75360 circumstance and condition. It had been well understood by the scientists and philosophers"               
+[15] "75440 82080 of classical antiquity that the earth was a mere point in a vast encompassing cosmos."                    
+[16] "83120 90160 But no one had ever seen it as such. Consider again that dot. That's here. That's home."                  
+[17] "90960 99120 That's us. On it, everyone you love, everyone you know, everyone you ever heard of,"                      
+[18] "99200 106160 every human being who ever was, lived out their lives. The aggregate or joy and suffering,"              
+[19] "107520 111200 thousands of confident religions, ideologies and economic doctrines,"                                   
+[20] "112160 118160 every hunter and forager, every hero and coward, every creator and destroyer of civilization,"          
+[21] "119280 124400 every king and peasant, every young couple in love, every mother and father,"                           
+[22] "124880 131920 hopeful child, inventor and explorer, every teacher of morals, every corrupt politician,"               
+[23] "131920 138800 every superstar, every supreme leader, every saint and sinner in the history of our species,"           
+[24] "139600 149120 lived there on the mode of dust suspended in a sunbeam. The earth is a very small stage"                
+[25] "149920 159200 in a vast cosmic arena. Think of the rivers of blood spilled by all those generals and emperors"        
+[26] "160320 167040 so that in glory and triumph they could become the momentary masters of a fraction of a dot."           
+[27] "168640 173840 Think of the endless coolties visited by the inhabitants of one corner of this pixel"                   
+[28] "174560 181440 on the scarcely distinguishable inhabitants of some other corner, how frequent their misunderstandings,"
+[29] "182080 189840 how eager they are to kill one another, how fervent their hatred. Our posturings,"                      
+[30] "190720 196560 our imagined self-importance, the delusion that we have some privilege to position in the universe,"    
+[31] "197360 206640 are challenged by this point of pale light. Our planet is a lonely spec in the greet,"                  
+[32] "206640 216320 enveloping cosmic dark. In our obscurity, in all this vastness, there is no hint that"                  
+[33] "216320 223760 help become from elsewhere to save us from ourselves. The earth is the only world known so far"         
+[34] "223840 229840 to harbor life. There is nowhere else, at least in the near future, to which our species could"         
+[35] "229840 240800 migrate. Visit? Yes. Settle. Not yet. Like it or not, for the moment, the earth is where we"            
+[36] "240800 247280 make our stand. It has been said that astronomy is humbling and character building experience."         
+[37] "248400 253680 There is perhaps no better demonstration of the folly of human conceits than this distant"              
+[38] "253760 261920 image of our tiny world. To me, it underscores our responsibility to deal more kindly with one"         
+[39] "261920 269600 another and to preserve and cherish the pale blue dot. The only home we've ever known."                 </code></pre>
+</div>
+</div>
+</section>
+<section id="small-1" class="slide level2">
+<h2>Small</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "start end text"                                                                                                                                   
+ [2] "1000 5000 The voyagers were guaranteed to work only until the Saturn encounter."                                                                  
+ [3] "5000 10000 I thought it might be a good idea, just after Saturn, to have them take one last glance homeward."                                     
+ [4] "10000 16000 From Saturn, I knew, the Earth would appear too small for voyager to make out any detail."                                            
+ [5] "16000 20000 Our planet would be just a point of light, a lonely pixel."                                                                           
+ [6] "20000 28000 Hardly distinguishable from the many other points of light voyager would see, nearby planets, far off suns."                          
+ [7] "28000 35000 But precisely because of the obscurity of our world thus revealed, such a picture might be worth having."                             
+ [8] "35000 42000 While almost everyone is taught that the Earth is a sphere, with all of us somehow glued to it by gravity,"                           
+ [9] "42000 52000 the reality of our circumstance did not really begin to sink in until the famous, frame-filling Apollo photograph of the whole Earth,"
+[10] "52000 58000 the one taken by the Apollo 17 astronauts on the last journey of humans to the Moon."                                                 
+[11] "58000 64000 It seemed to me that another picture of the Earth, this one taken from a hundred thousand times farther away,"                        
+[12] "64000 72000 might help in the continuing process of revealing to ourselves our true circumstance and condition."                                  
+[13] "72000 77000 It had been well understood by the scientists and philosophers of classical antiquity,"                                               
+[14] "77000 83000 that the Earth was a mere point in a vast, encompassing cosmos."                                                                      
+[15] "83000 86000 But no one had ever seen it as such."                                                                                                 
+[16] "86000 88000 Consider again that dot."                                                                                                             
+[17] "88000 93000 That's here, that's home, that's us."                                                                                                 
+[18] "93000 99000 On it, everyone you love, everyone you know, everyone you ever heard of,"                                                             
+[19] "99000 104000 every human being, whoever was, lived out their lives."                                                                              
+[20] "104000 112000 The aggregate of our joy and suffering, thousands of confident religions, ideologies and economic doctrines,"                       
+[21] "112000 119000 every hunter and forager, every hero and coward, every creator and destroyer of civilization,"                                      
+[22] "119000 125000 every king and peasant, every young couple in love, every mother and father,"                                                       
+[23] "125000 132000 every hopeful child, inventor and explorer, every teacher of morals, every corrupt politician,"                                     
+[24] "132000 139000 every superstar, every supreme leader, every saint and sinner in the history of our species,"                                       
+[25] "139000 146000 lived there, on the mode of dust, suspended in a sunbeam."                                                                          
+[26] "146000 154000 The Earth is a very small stage in a vast cosmic arena."                                                                            
+[27] "154000 160000 Think of the rivers of blood spilled by all those generals and emperors,"                                                           
+[28] "160000 168000 so that in glory and triumph they could become the momentary masters of a fraction of a dot."                                       
+[29] "168000 174000 Think of the endless cruelties visited by the inhabitants of one corner of this pixel,"                                             
+[30] "174000 179000 on the scarcely distinguishable inhabitants of some other corner,"                                                                  
+[31] "179000 184000 how frequent their misunderstandings, how eager they are to kill one another,"                                                      
+[32] "184000 188000 how fervent their hatreds."                                                                                                         
+[33] "188000 197000 Our posturings, our imagined self-importance, the delusion that we have some privileged position in the universe,"                  
+[34] "197000 201000 are challenged by this point of pale light."                                                                                        
+[35] "201000 209000 Our planet is a lonely speck in the great enveloping cosmic dark."                                                                  
+[36] "209000 221000 In our obscurity, in all this vastness, there is no hint that help will come from elsewhere to save us from ourselves."             
+[37] "221000 225000 The Earth is the only world known so far to harbor life."                                                                           
+[38] "225000 231000 There is nowhere else, at least in the near future, to which our species could migrate."                                            
+[39] "231000 237000 Visit? Yes. Settle. Not yet."                                                                                                       
+[40] "237000 243000 Like it or not, for the moment, the Earth is where we make our stand."                                                              
+[41] "243000 248000 It has been said that astronomy is a humbling and character-building experience."                                                   
+[42] "248000 257000 There is perhaps no better demonstration of the folly of human conceits than this distant image of our tiny world."                 
+[43] "257000 263000 To me, it underscores our responsibility to deal more kindly with one another"                                                      
+[44] "263000 271000 and to preserve and cherish the pale blue dot, the only home we've ever known."                                                     </code></pre>
+</div>
+</div>
+</section>
+<section id="large-1" class="slide level2">
+<h2>Large</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "start end text"                                                                                            
+ [2] "900 4640 The Voyagers were guaranteed to work only until the Saturn encounter."                            
+ [3] "5540 7660 I thought it might be a good idea, just after Saturn,"                                           
+ [4] "7940 10200 to have them take one last glance homeward."                                                    
+ [5] "10960 14020 From Saturn, I knew, the Earth would appear too small"                                         
+ [6] "14020 15820 for Voyager to make out any detail."                                                           
+ [7] "16460 19900 Our planet would be just a point of light, a lonely pixel,"                                    
+ [8] "20760 23040 hardly distinguishable from the many other points of light"                                    
+ [9] "23040 27580 Voyager would see, nearby planets, far-off suns."                                              
+[10] "27580 32260 But precisely because of the obscurity of our world thus revealed,"                            
+[11] "32900 34460 such a picture might be worth having."                                                         
+[12] "35460 37780 While almost everyone is taught that the Earth is a sphere,"                                   
+[13] "38240 40960 with all of us somehow glued to it by gravity,"                                                
+[14] "41700 45740 the reality of our circumstance did not really begin to sink in"                               
+[15] "45740 51340 until the famous frame-filling Apollo photograph of the whole Earth,"                          
+[16] "52120 54260 the one taken by the Apollo 17 astronauts"                                                     
+[17] "54260 56940 on the last journey of humans to the Moon."                                                    
+[18] "58300 60200 It seemed to me that another picture of the Earth,"                                            
+[19] "60500 63880 this one taken from a hundred thousand times farther away,"                                    
+[20] "64440 68100 might help in the continuing process of revealing to ourselves"                                
+[21] "68100 71140 our true circumstance and condition."                                                          
+[22] "72200 75180 It had been well understood by the scientists and philosophers"                                
+[23] "75180 78720 of classical antiquity that the Earth was a mere point"                                        
+[24] "78720 82140 in a vast, encompassing cosmos."                                                               
+[25] "82820 84860 But no one had ever seen it as such."                                                          
+[26] "85900 87060 Consider again that dot."                                                                      
+[27] "87920 88880 That's here."                                                                                  
+[28] "89440 90220 That's home."                                                                                  
+[29] "90980 91640 That's us."                                                                                    
+[30] "92720 96680 On it, everyone you love, everyone you know,"                                                  
+[31] "97560 101140 everyone you ever heard of, every human being who ever was,"                                  
+[32] "101900 102880 lived out their lives."                                                                      
+[33] "103660 106220 The aggregate of our joy and suffering,"                                                     
+[34] "107580 111280 thousands of confident religions, ideologies, and economic doctrines,"                       
+[35] "112220 115860 every hunter and forager, every hero and coward,"                                            
+[36] "115860 117500 every creator and destroyer,"                                                                
+[37] "117500 118180 every leader of civilization,"                                                               
+[38] "118820 120520 every king and peasant,"                                                                     
+[39] "121400 122720 every young couple in love,"                                                                 
+[40] "123260 124340 every mother and father,"                                                                    
+[41] "124900 125800 hopeful child,"                                                                              
+[42] "126460 127900 inventor and explorer,"                                                                      
+[43] "128700 130120 every teacher of morals,"                                                                    
+[44] "130280 131400 every corrupt politician,"                                                                   
+[45] "132060 133320 every superstar,"                                                                            
+[46] "133880 135520 every supreme leader,"                                                                       
+[47] "136080 138920 every saint and sinner in the history of our species,"                                       
+[48] "139600 140200 lived there,"                                                                                
+[49] "141040 142120 on a moat of dust,"                                                                          
+[50] "142860 144920 suspended in a sunbeam."                                                                     
+[51] "145720 147480 The Earth is a very, very small,"                                                            
+[52] "147480 153480 very small stage in a vast, cosmic arena."                                                   
+[53] "153480 160540 Think of the rivers of blood spilled by all those generals and emperors,"                    
+[54] "160540 168980 so that in glory and triumph they could become the momentary masters of a fraction of a dot."
+[55] "168980 174760 Think of the endless cruelties visited by the inhabitants of one corner of this pixel,"      
+[56] "174760 176920 on the scarcely distinguishable inhabitants,"                                                
+[57] "176920 177420 on the few, the few, the few, the few, the few, the few."                                    
+[58] "177420 178560 Of some other corner,"                                                                       
+[59] "179240 181560 how frequent their misunderstandings,"                                                       
+[60] "182020 184080 how eager they are to kill one another,"                                                     
+[61] "184740 186640 how fervent their hatreds."                                                                  
+[62] "188460 189860 Our posturings,"                                                                             
+[63] "190700 193020 our imagined self-importance,"                                                               
+[64] "193020 196600 the delusion that we have some privileged position in the universe,"                         
+[65] "197320 200820 are challenged by this point of pale light."                                                 
+[66] "201940 205260 Our planet is a lonely speck"                                                                
+[67] "205260 207020 in the great enveloping,"                                                                    
+[68] "207420 208700 in cosmic dark."                                                                             
+[69] "208700 211700 In our obscurity,"                                                                           
+[70] "211700 213700 in all this vastness,"                                                                       
+[71] "213700 217700 there is no hint that help will come from elsewhere"                                         
+[72] "217700 220700 to save us from ourselves."                                                                  
+[73] "220700 224700 The Earth is the only world known so far to harbor life."                                    
+[74] "224700 226700 There is nowhere else,"                                                                      
+[75] "226700 228700 at least in the near future,"                                                                
+[76] "228700 230700 to which our species could migrate."                                                         
+[77] "230700 232700 Visit? Yes."                                                                                 
+[78] "232700 234700 Settle? Not yet."                                                                            
+[79] "234700 236700 Like it or not,"                                                                             
+[80] "236700 238700 for the moment,"                                                                             
+[81] "238700 241700 the Earth is where we make our stand."                                                       
+[82] "241700 247700 It has been said that astronomy is a humbling and character-building experience."            
+[83] "247700 251700 There is perhaps no better demonstration of the folly of human conceits"                     
+[84] "251700 255700 than this distant image of our tiny world."                                                  
+[85] "255700 259700 To me, it underscores our responsibility"                                                    
+[86] "259700 261700 to deal more kindly with one another,"                                                       
+[87] "261700 265700 and to preserve and cherish the pale blue dot."                                              
+[88] "266700 269700 The only home we've ever known."                                                             </code></pre>
+</div>
+</div>
+</section>
+<section id="turbo-1" class="slide level2">
+<h2>Turbo</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] "start end text"                                                                                              
+  [2] "900 4640 The Voyagers were guaranteed to work only until the Saturn encounter."                              
+  [3] "5540 10200 I thought it might be a good idea, just after Saturn, to have them take one last glance homeward."
+  [4] "10940 15840 From Saturn, I knew, the Earth would appear too small for Voyager to make out any detail."       
+  [5] "16460 19900 Our planet would be just a point of light, a lonely pixel."                                      
+  [6] "20680 24380 Hardly distinguishable from the many other points of light Voyager would see,"                   
+  [7] "25120 27580 nearby planets, far-off suns."                                                                   
+  [8] "27580 32260 But precisely because of the obscurity of our world thus revealed,"                              
+  [9] "32900 34460 such a picture might be worth having."                                                           
+ [10] "35460 37780 While almost everyone is taught that the Earth is a sphere,"                                     
+ [11] "38240 40960 with all of us somehow glued to it by gravity,"                                                  
+ [12] "41700 45740 the reality of our circumstance did not really begin to sink in"                                 
+ [13] "45740 51340 until the famous frame-filling Apollo photograph of the whole Earth,"                            
+ [14] "51740 56940 the one taken by the Apollo 17 astronauts on the last journey of humans to the Moon."            
+ [15] "57580 60200 It seemed to me that another picture of the Earth,"                                              
+ [16] "60500 63880 this one taken from a hundred thousand times farther away,"                                      
+ [17] "64820 68120 might help in the continuing process of revealing to ourselves"                                  
+ [18] "68120 71140 our true circumstance and condition."                                                            
+ [19] "72200 76580 It had been well understood by the scientists and philosophers of classical antiquity"           
+ [20] "76580 82000 that the Earth was a mere point in a vast, encompassing cosmos."                                 
+ [21] "82000 84880 But no one had ever seen it as such."                                                            
+ [22] "85900 87060 Consider again that dot."                                                                        
+ [23] "87980 88880 That's here."                                                                                    
+ [24] "89460 90220 That's home."                                                                                    
+ [25] "90800 91640 That's us."                                                                                      
+ [26] "92740 96680 On it, everyone you love, everyone you know,"                                                    
+ [27] "97480 98980 everyone you ever heard of,"                                                                     
+ [28] "99240 101140 every human being who ever was,"                                                                
+ [29] "101840 102880 lived out their lives."                                                                        
+ [30] "102880 106220 The aggregate of our joy and suffering,"                                                       
+ [31] "107460 111280 thousands of confident religions, ideologies, and economic doctrines,"                         
+ [32] "111900 113560 every hunter and forager,"                                                                     
+ [33] "114380 115840 every hero and coward,"                                                                        
+ [34] "116020 118160 every creator and destroyer of civilization,"                                                  
+ [35] "118840 120520 every king and peasant,"                                                                       
+ [36] "121380 122720 every young couple in love,"                                                                   
+ [37] "123220 124340 every mother and father,"                                                                      
+ [38] "124980 125800 hopeful child,"                                                                                
+ [39] "126480 127920 inventor and explorer,"                                                                        
+ [40] "128620 130120 every teacher of morals,"                                                                      
+ [41] "130120 131420 every corrupt politician,"                                                                     
+ [42] "132060 133320 every superstar,"                                                                              
+ [43] "133860 135520 every supreme leader,"                                                                         
+ [44] "136080 138920 every saint and sinner in the history of our species,"                                         
+ [45] "139700 140200 lived there,"                                                                                  
+ [46] "141060 142120 on a mote of dust,"                                                                            
+ [47] "142860 144940 suspended in a sunbeam."                                                                       
+ [48] "146100 149240 The Earth is a very small stage"                                                               
+ [49] "149240 152520 in a vast, cosmic arena."                                                                      
+ [50] "153840 155980 Think of the rivers of blood"                                                                  
+ [51] "155980 159300 spilled by all those generals and emperors."                                                   
+ [52] "160120 162200 So that in glory and triumph,"                                                                 
+ [53] "162400 163940 they could become the momentary masters"                                                       
+ [54] "163940 167200 of a fraction of a dot."                                                                       
+ [55] "168400 170300 Think of the endless cruelties"                                                                
+ [56] "170300 172220 visited by the inhabitants"                                                                    
+ [57] "172220 173800 of one corner of this pixel"                                                                   
+ [58] "173800 176900 on the scarcely distinguishable inhabitants"                                                   
+ [59] "176900 178560 of some other corner."                                                                         
+ [60] "179220 181560 How frequent their misunderstandings,"                                                         
+ [61] "182020 184100 how eager they are to kill one another,"                                                       
+ [62] "184100 186320 how fervent their hatred."                                                                     
+ [63] "186320 189900 Our posturings,"                                                                               
+ [64] "190380 193020 our imagined self-importance,"                                                                 
+ [65] "193240 195840 the delusion that we have some privileged position"                                            
+ [66] "195840 196600 in the universe,"                                                                              
+ [67] "197320 200820 are challenged by this point of pale light."                                                   
+ [68] "201960 202600 Our planet"                                                                                    
+ [69] "202600 205260 is a lonely speck"                                                                             
+ [70] "205260 208400 in the great, enveloping, cosmic dark."                                                        
+ [71] "208400 211420 In our obscurity,"                                                                             
+ [72] "211840 213760 in all this vastness,"                                                                         
+ [73] "214100 215600 there is no hint"                                                                              
+ [74] "215600 217580 that help will come from elsewhere"                                                            
+ [75] "217580 220120 to save us from ourselves."                                                                    
+ [76] "221080 222820 The Earth is the only world"                                                                   
+ [77] "222820 224660 known so far to harbor life."                                                                  
+ [78] "225560 226720 There is nowhere else,"                                                                        
+ [79] "227020 228160 at least in the near future,"                                                                  
+ [80] "228680 230380 to which our species could migrate."                                                           
+ [81] "231280 231600 Visit?"                                                                                        
+ [82] "232440 232840 Yes."                                                                                          
+ [83] "233840 234220 Settle?"                                                                                       
+ [84] "234960 235740 Not yet."                                                                                      
+ [85] "235740 237780 Like it or not,"                                                                               
+ [86] "238220 239000 for the moment,"                                                                               
+ [87] "239860 241660 the Earth is where we make our stand."                                                         
+ [88] "242900 243700 It has been said"                                                                              
+ [89] "243700 244980 that astronomy is a humbling"                                                                  
+ [90] "244980 247340 and character-building experience."                                                            
+ [91] "248480 249160 There is perhaps"                                                                              
+ [92] "249160 250240 no better demonstration"                                                                       
+ [93] "250240 251960 of the folly of human conceits"                                                                
+ [94] "251960 254280 than this distant image"                                                                       
+ [95] "254280 255860 of our tiny world."                                                                            
+ [96] "256980 257480 To me,"                                                                                        
+ [97] "258180 260140 it underscores our responsibility"                                                             
+ [98] "260140 262280 to deal more kindly with one another"                                                          
+ [99] "262280 263940 and to preserve"                                                                               
+[100] "263940 265300 and cherish"                                                                                   
+[101] "265300 266660 the pale blue dot,"                                                                            
+[102] "267360 268200 the only home"                                                                                 
+[103] "268200 269600 we've ever known."                                                                             </code></pre>
+</div>
+</div>
+</section>
+<section id="testing-luxembourgish-transcription-and-translation" class="slide level2">
+<h2>Testing Luxembourgish transcription and translation</h2>
+<p>Source video of <a href="https://www.youtube.com/watch?v=KJ7nbPJvOIk">Prime Minister Luc Frieden’s New Year Speech</a> Duration 6m39s.</p>
+<p>A transcript is <a href="https://gouvernement.lu/en/actualites/toutes_actualites/discours/2023/12-decembre/31-frieden-nouvelan.html">provided</a> to compare with.</p>
+<p>Ran the commands to transcribe:</p>
+<pre><code>$ whisper PM_Friedens_NYS.m4a --language Luxembourgish --model turbo</code></pre>
+<p>Results look very good.</p>
+<p>And then to transcribe and translate to English:</p>
+<pre><code>$ whisper PM_Friedens_NYS.m4a --language Luxembourgish --model turbo --task translate</code></pre>
+<p>This doesn’t seem to work.</p>
+</section>
+<section id="test-2" class="slide level2">
+<h2>Test #2</h2>
+<p>During a meeting we recorded ourselves introducing ourselves in English, German, Italian, and French.</p>
+<p>We applied whisper, without specifying a source language:</p>
+<pre><code>$ whisper Monday.m4a --model turbo</code></pre>
+<p>The results were all transcribed and translated to English. Besides small issues with names, the results were very good.</p>
+</section>
+<section id="thanks" class="slide level2">
+<h2>Thanks</h2>
+<p>That’s it. I hope you found this helpful.</p>
+<div class="quarto-auto-generated-content">
+<div class="footer footer-default">
+
+</div>
+</div>
+</section>
+    </div>
+  </div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="whisper_evaluation_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="whisper_evaluation_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1600,
+
+        height: 900,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+    window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
+      }
+      toggleBodyColorPrimary();  
+      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+      tabsets.forEach(function(tabset) {
+        const tabby = new Tabby('#' + tabset.id);
+      });
+      const isCodeAnnotation = (el) => {
+        for (const clz of el.classList) {
+          if (clz.startsWith('code-annotation-')) {                     
+            return true;
+          }
+        }
+        return false;
+      }
+      const onCopySuccess = function(e) {
+        // button target
+        const button = e.trigger;
+        // don't keep focus
+        button.blur();
+        // flash "checked"
+        button.classList.add('code-copy-button-checked');
+        var currentTitle = button.getAttribute("title");
+        button.setAttribute("title", "Copied!");
+        let tooltip;
+        if (window.bootstrap) {
+          button.setAttribute("data-bs-toggle", "tooltip");
+          button.setAttribute("data-bs-placement", "left");
+          button.setAttribute("data-bs-title", "Copied!");
+          tooltip = new bootstrap.Tooltip(button, 
+            { trigger: "manual", 
+              customClass: "code-copy-button-tooltip",
+              offset: [0, -8]});
+          tooltip.show();    
+        }
+        setTimeout(function() {
+          if (tooltip) {
+            tooltip.hide();
+            button.removeAttribute("data-bs-title");
+            button.removeAttribute("data-bs-toggle");
+            button.removeAttribute("data-bs-placement");
+          }
+          button.setAttribute("title", currentTitle);
+          button.classList.remove('code-copy-button-checked');
+        }, 1000);
+        // clear code selection
+        e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
+      });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        // For code content inside modals, clipBoardJS needs to be initialized with a container option
+        // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp('/' + window.location.host + '/');
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
+      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+        const config = {
+          allowHTML: true,
+          maxWidth: 500,
+          delay: 100,
+          arrow: false,
+          appendTo: function(el) {
+              return el.closest('section.slide') || el.parentElement;
+          },
+          interactive: true,
+          interactiveBorder: 10,
+          theme: 'light-border',
+          placement: 'bottom-start',
+        };
+        if (contentFn) {
+          config.content = contentFn;
+        }
+        if (onTriggerFn) {
+          config.onTrigger = onTriggerFn;
+        }
+        if (onUntriggerFn) {
+          config.onUntrigger = onUntriggerFn;
+        }
+          config['offset'] = [0,0];
+          config['maxWidth'] = 700;
+        window.tippy(el, config); 
+      }
+      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+      for (var i=0; i<noterefs.length; i++) {
+        const ref = noterefs[i];
+        tippyHover(ref, function() {
+          // use id or data attribute instead here
+          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+          try { href = new URL(href).hash; } catch {}
+          const id = href.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
+        });
+      }
+      const findCites = (el) => {
+        const parentEl = el.parentElement;
+        if (parentEl) {
+          const cites = parentEl.dataset.cites;
+          if (cites) {
+            return {
+              el,
+              cites: cites.split(' ')
+            };
+          } else {
+            return findCites(el.parentElement)
+          }
+        } else {
+          return undefined;
+        }
+      };
+      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+      for (var i=0; i<bibliorefs.length; i++) {
+        const ref = bibliorefs[i];
+        const citeInfo = findCites(ref);
+        if (citeInfo) {
+          tippyHover(citeInfo.el, function() {
+            var popup = window.document.createElement('div');
+            citeInfo.cites.forEach(function(cite) {
+              var citeDiv = window.document.createElement('div');
+              citeDiv.classList.add('hanging-indent');
+              citeDiv.classList.add('csl-entry');
+              var biblioDiv = window.document.getElementById('ref-' + cite);
+              if (biblioDiv) {
+                citeDiv.innerHTML = biblioDiv.innerHTML;
+              }
+              popup.appendChild(citeDiv);
+            });
+            return popup.innerHTML;
+          });
+        }
+      }
+    });
+    </script>
+    
+
+</body></html>
